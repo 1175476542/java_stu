@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Array/Array.iml" filepath="$PROJECT_DIR$/Array/Array.iml" />
+      <module fileurl="file://$PROJECT_DIR$/DataConstruct/DataConstruct.iml" filepath="$PROJECT_DIR$/DataConstruct/DataConstruct.iml" />
+      <module fileurl="file://$PROJECT_DIR$/DateTimeAPI/DateAndTimeAPI.iml" filepath="$PROJECT_DIR$/DateTimeAPI/DateAndTimeAPI.iml" />
+      <module fileurl="file://$PROJECT_DIR$/DesignMode/DesignMode.iml" filepath="$PROJECT_DIR$/DesignMode/DesignMode.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Enum/Enum.iml" filepath="$PROJECT_DIR$/Enum/Enum.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Exception/Exception.iml" filepath="$PROJECT_DIR$/Exception/Exception.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Excercise/Excercise.iml" filepath="$PROJECT_DIR$/Excercise/Excercise.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MathAPI/MathAPI.iml" filepath="$PROJECT_DIR$/MathAPI/MathAPI.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ObjectTest/ObjectTest.iml" filepath="$PROJECT_DIR$/ObjectTest/ObjectTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/PackageTest/PackageTest.iml" filepath="$PROJECT_DIR$/PackageTest/PackageTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/String/String.iml" filepath="$PROJECT_DIR$/String/String.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TestClass/TestClass.iml" filepath="$PROJECT_DIR$/TestClass/TestClass.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TestInterface/TestInterface.iml" filepath="$PROJECT_DIR$/TestInterface/TestInterface.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Thread/Thread.iml" filepath="$PROJECT_DIR$/Thread/Thread.iml" />
+      <module fileurl="file://$PROJECT_DIR$/WrapperClass/WrapperClass.iml" filepath="$PROJECT_DIR$/WrapperClass/WrapperClass.iml" />
+      <module fileurl="file://$PROJECT_DIR$/idea_test/idea_test.iml" filepath="$PROJECT_DIR$/idea_test/idea_test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/javase_code.iml" filepath="$PROJECT_DIR$/javase_code.iml" />
+    </modules>
+  </component>
+</project>
