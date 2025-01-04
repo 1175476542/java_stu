@@ -12,7 +12,7 @@ public class TestAnnotation {
 @interface MyAnnotation2{
 
 }
-@MyAnnotation
+@com.test.enumeration.MyAnnotation
 class Annotation{
 
 }

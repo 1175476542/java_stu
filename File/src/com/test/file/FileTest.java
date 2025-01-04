@@ -19,12 +19,12 @@ class Test1{
         File file2 = new File("C:/windows/appData");
         File file3 = new File("C:"+File.separator+"windows"+File.separator+"appData");
         //新建目录对象
-        File dir = new File("G:/java学习视频/鱼皮分享-保姆级Java系列资源/01-Java基础+Java高级/day22_全天上课资料");
+        File dir = new File("{path}");
     }
     @Test
     public void test2(){
         //API
-        File dir = new File("G:\\java学习视频\\鱼皮分享-保姆级Java系列资源\\01-Java基础+Java高级\\day22_全天上课资料\\Java复习笔记.md");
+        File dir = new File("{path}");
         System.out.println("文件名：" + dir.getName());
         System.out.println("文件大小：" + dir.length());
         System.out.println("文件是否存在：" + dir.exists());
@@ -100,4 +100,17 @@ class Test1{
             System.out.println("文件不存在");
         }
     }
+    @Test
+    public void test8(){
+        //获取文件下一级目录
+        File file = new File("../file");
+        String[] list = file.list();
+//        for (int i = 0; i < list.length; i++) {
+//            System.out.println(list[i]);
+//        }
+        for(Object obj:list){
+            System.out.println(obj);
+        }
+    }
+
 }
