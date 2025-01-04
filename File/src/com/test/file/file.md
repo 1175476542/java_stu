@@ -1,3 +1,15 @@
+<!-- TOC -->
+* [文件](#文件)
+  * [路径的分隔符](#路径的分隔符)
+  * [API](#api)
+  * [目录的递归操作](#目录的递归操作)
+  * [IO操作](#io操作)
+  * [文件的IO操作](#文件的io操作)
+  * [使用字节流读取纯文本文件](#使用字节流读取纯文本文件)
+  * [转换流](#转换流)
+  * [数据IO流](#数据io流)
+  * [序列化和反序列化](#序列化和反序列化)
+<!-- TOC -->
 # 文件
 
 - java.io.file:类
@@ -543,3 +555,279 @@ public void test4() throws IOException {
         //读写顺序必须一致
     }
 ```
+## 序列化和反序列化
+1. ObjectOutputStream:用于输出对象，把对象转换为字节输出，对象的输出过程称为序列化过程
+- 比OutputStream多了很多方法，其中一个是writeObject(obj)
+- 如果没有实现Serialization接口的类型，在序列化时，报错NotSerializableException，不能序列化
+- 如果需要解决问题，需要被输出的对象实现Serialization接口
+- 只能将支持 java.io.Serializable 接口的对象写入流中。每个 serializable 对象的类都被编码，编码内容包括类名和类签名、对象的字段值和数组值，以及从初始对象中引用的其他所有对象的闭包。
+- writeObject 方法用于将对象写入流中。所有对象（包括 String 和数组）都可以通过 writeObject 写入。可将多个对象或基元写入流中。必须使用与写入对象时相同的类型和顺序从相应 ObjectInputstream 中读回对象。
+2. ObjectInputstream：用于输入对象，把字节序列转为对象读取，对象的读取过程称为反序列化。
+- ObjectInputstream比InputStream多了很多方法，其中一个是 Object readObject()
+- ObjectInputStream:用于输入对象，把字节序列转为对象读取，对象的读取过程称为反序列化
+  - 比InputStream多了很多方法，其中一个是Object readObject()
+```java
+class TestSerialization{
+    @Test
+    public void test1() throws IOException {
+        User user = new User("cxy","123",18);
+        FileOutputStream fos = new FileOutputStream("obj.dat");
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        oos.writeObject(user);
+        oos.close();
+        fos.close();
+    }
+    @Test
+    public void test2() throws IOException, ClassNotFoundException {
+        FileInputStream fis = new FileInputStream("obj.dat");
+        ObjectInputStream ois =new ObjectInputStream(fis);
+        Object obj = ois.readObject();//可能会存在没有这个类(User)
+        System.out.println(obj);
+        ois.close();
+        fis.close();
+    }
+```
+3. 序列化版本ID
+- 当对象已经输出到文件中后，修改了类，再次读取这个文件时，报InvalidClassException
+- 当流中关于类的serialVersionUID与本地serialVersionUID对不上，就会报错
+- 如何解决：
+  - 修改本地的serialVersionUID为流中的serialVersionUID
+  - 或者，在当初实现这个serializable接口时，就固定一个serialVersionUID
+  - `private static final long serialVersionUID = 1L;`
+4. 不序列的字段
+- 如果某一个属性不需要序列化，可以再属性前面加一个关键字：transient
+- 如果某个属性是static，那么也不会序列化，因为静态变量不是属于某个对象，而是整个类的，所以不需要随着对象的序列化而序列化
+```java
+package com.test.file;
+
+import java.io.Serializable;
+
+public class Goods implements Serializable {
+    private static final long serialVersionID = 1L;
+    private static String brand = "曹哥";
+    private String name;
+    private int price;
+    private transient int sale;//表示不需要序列化
+
+    public Goods() {
+    }
+
+    public Goods(String name, int sale, int price) {
+        this.name = name;
+        this.sale = sale;
+        this.price = price;
+    }
+
+    public Goods(String name, int price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getSale() {
+        return sale;
+    }
+
+    public static String getBrand() {
+        return brand;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
+    }
+
+    public void setSale(int sale) {
+        this.sale = sale;
+    }
+
+    public static void setBrand(String brand) {
+        Goods.brand = brand;
+    }
+
+    @Override
+    public String toString() {
+        return "Goods{" +
+                "name='" + name + '\'' +
+                ", price=" + price +
+                ", sale=" + sale +
+                ", brand = " +brand +
+                '}';
+    }
+}
+
+```
+
+```java
+package com.test.file;
+
+import org.junit.jupiter.api.Test;
+
+import java.io.*;
+
+public class GoodsTraansformUnserialization {
+    @Test
+    public void test1() throws IOException {
+        FileOutputStream fos = new FileOutputStream("goods.dat");
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        Goods goods = new Goods("4070super",8,5400);
+        oos.writeObject(goods);
+        oos.close();
+        fos.close();
+    }
+    @Test
+    public void test2() throws IOException,ClassNotFoundException {
+        FileInputStream fis = new FileInputStream("goods.dat");
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        Object obj = ois.readObject();
+        System.out.println(obj);
+        ois.close();
+        fis.close();
+
+    }
+}
+
+```
+5. 对象的引用数据类型属性都要实现Serializable接口
+```java
+package com.atguigu.test10;
+
+public class Wife {
+	private String name;
+	private Husband husband;
+	public Wife(String name, Husband husband) {
+		super();
+		this.name = name;
+		this.husband = husband;
+	}
+	public Wife() {
+		super();
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public Husband getHusband() {
+		return husband;
+	}
+	public void setHusband(Husband husband) {
+		this.husband = husband;
+	}
+	@Override
+	public String toString() {
+		return "Wife [name=" + name + ", husband=" + husband.getName() +  "]";
+	}
+	
+}
+
+```
+```java
+package com.atguigu.test10;
+
+import java.io.Serializable;
+
+/*
+ * 在序列化Husband对象，要求Wife序列化。
+ * 这里发现String类型也实现序列化接口了。
+ * 
+ * 结论：
+ * 	序列化一个对象时，要求它的属性要么是基本数据类型，如果是引用数据类型，这个引用数据类型也必须实现Serializable接口。
+ *  序列化一个数组，要求元素类型实现Serializable接口。
+ */
+public class Husband implements Serializable{
+	private static final long serialVersionUID = 1L;
+	private String name;
+	private Wife wife;
+	public Husband(String name, Wife wife) {
+		super();
+		this.name = name;
+		this.wife = wife;
+	}
+	public Husband() {
+		super();
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public Wife getWife() {
+		return wife;
+	}
+	public void setWife(Wife wife) {
+		this.wife = wife;
+	}
+	@Override
+	public String toString() {
+		return "Husband [name=" + name + ", wife=" + wife.getName() + "]";
+	}
+	
+}
+
+```
+
+```java
+package com.atguigu.test10;
+
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+
+import org.junit.Test;
+
+public class TestObject4 {
+	@Test
+	public void test02(){
+		Husband h = new Husband();
+		Wife wife = new Wife();
+		
+		h.setName("崔志恒");
+		wife.setName("石榴");
+		
+		h.setWife(wife);
+		wife.setHusband(h);
+		
+		System.out.println(h);
+	}
+	
+	@Test
+	public void test01()throws Exception {
+		Husband h = new Husband();
+		Wife wife = new Wife();
+		
+		h.setName("崔志恒");
+		wife.setName("石榴");
+		
+		h.setWife(wife);
+		wife.setHusband(h);
+		
+		FileOutputStream fos = new FileOutputStream("marry.dat");
+		ObjectOutputStream oos = new ObjectOutputStream(fos);
+		
+		oos.writeObject(h);
+		/*
+		 * java.io.NotSerializableException: com.atguigu.test10.Wife
+		 * 虽然Husband实现了Serializable，但是因为在序列化Husband过程中，包含wife对象，所以要求Wife类也要实现Serializable接口
+		 */
+		
+		oos.close();
+		fos.close();
+	}
+}
+
+```
+- 上述代码中Husband类中引用了Wife对象，所以Wife类应该实现Serializable接口
+- 包括String类型也实现了Serializable接口
+> 结论：序列化一个对象时，要求他的属性要么是基本数据类型，如果是引用数据类型，这个引用数据类型也必须实现Serializable接口
