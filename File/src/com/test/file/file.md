@@ -828,6 +828,251 @@ public class TestObject4 {
 }
 
 ```
+
 - 上述代码中Husband类中引用了Wife对象，所以Wife类应该实现Serializable接口
 - 包括String类型也实现了Serializable接口
+## 序列化补充
+1. java.io.Serializable:不能控制
+2. java.io.Externalizable:定制writeObject和readObject
+```java
+    public void testGood() throws IOException,ClassNotFoundException{
+        FileInputStream fis = new FileInputStream("good.dat");
+        ObjectInputStream ois = new ObjectInputStream(fis);
+
+        Object obj = ois.readObject();
+        System.out.println(obj);
+        ois.close();
+        fis.close();//Good实现了Externalizable接口，可以自己定制输入输出
+
+    }
+    @Test
+    public void testGoodOut()throws IOException,ClassNotFoundException{
+        Good g = new Good("3090TI",8,3000);
+        g.setBrand("七彩虹");
+        FileOutputStream fos = new FileOutputStream("good.dat");
+        ObjectOutputStream oos  =new ObjectOutputStream(fos);
+        oos.writeObject(g);
+        oos.close();
+        fos.close();
+    }
+```
+```java
+package com.test.file;
+
+import java.io.*;
+
+public class Good implements Externalizable {
+    private static final long serialVersionID = 1L;
+    private static String brand = "曹哥";
+    private String name;
+    private int price;
+    private transient int sale;//表示不需要序列化
+
+    public Good() {
+    }
+
+    public Good(String name, int sale, int price) {
+        this.name = name;
+        this.sale = sale;
+        this.price = price;
+    }
+
+    public Good(String name, int price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getSale() {
+        return sale;
+    }
+
+    public static String getBrand() {
+        return brand;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
+    }
+
+    public void setSale(int sale) {
+        this.sale = sale;
+    }
+
+    public static void setBrand(String brand) {
+        Good.brand = brand;
+    }
+
+    @Override
+    public String toString() {
+        return "Goods{" +
+                "name='" + name + '\'' +
+                ", price=" + price +
+                ", sale=" + sale +
+                ", brand = " +brand +
+                '}';
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeUTF(name);
+        out.writeInt(price);
+        out.writeInt(sale);
+        out.writeUTF(brand);
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        name = in.readUTF();
+        price = in.readInt();
+        sale = in.readInt();
+        brand = in.readUTF();
+    }
+}
+
+```
 > 结论：序列化一个对象时，要求他的属性要么是基本数据类型，如果是引用数据类型，这个引用数据类型也必须实现Serializable接口
+## 打印流
+1. PrintStream
+- 经典代表：System.out、System.err
+- 所有的类型写出去都是按照文本处理
+- new PrintStream(文件名)
+- new PrintStream(文件名,编码)
+- new PrintStream(另一个字节输出流)
+2. PrintWriter
+- Web阶段：从服务器端往客户端返回消息时，用到response，response.getWriter()可以返回
+PrintWriter对象。即Web服务器网客户端（例如：浏览器）返回html网页时，用的是PrintWrter对象的输出方法
+```java
+    public void test(){
+        PrintStream ps = System.out;
+        ps.println("hello");
+        ps.println();
+    }
+    @Test
+    public void test1() throws FileNotFoundException {
+        PrintStream ps = new PrintStream("Geforce.txt");
+        ps.println("4070TI");
+        ps.println("4070TI Super");
+        ps.close();
+
+    }
+```
+## 文本扫描仪
+- Scanner
+1. System.in：默认情况下是从键盘扫描
+2. 可以从指定的文件，流中读取文本数据
+```java
+package com.test.file;
+
+import org.junit.jupiter.api.Test;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Scanner;
+
+public class ScannerTest {
+    @Test
+    public void test() throws IOException {
+        Scanner sc = new Scanner(new FileInputStream("Geforce.txt"));
+        while(sc.hasNextLine()){
+            System.out.println(sc.nextLine());
+        }
+        sc.close();
+    }
+    @Test
+    public void test2(){
+        Scanner sc = new Scanner(System.in);
+        int num = sc.nextInt();
+        System.out.println(num);
+    }
+    @Test
+    public void test3() throws IOException{
+        Scanner sc = new Scanner(new File("Geforce.txt","GBK"));
+        while(sc.hasNextLine()){
+            System.out.println(sc.nextLine());
+        }
+        sc.close();
+    }
+}
+
+```
+## JDK1.7新增的try...catch处理方式
+- 被称为try...with...resource，他是为资源关闭专门设计的try...catch方法
+- 凡是写到try小括号里面的资源文件，会自动关闭
+```java
+    public void test1() {
+        //从d:/1.txt(GBK)文件中，读取内容，写到项目根目录下1.txt(UTF-8)文件中
+        try(
+                FileInputStream fis = new FileInputStream("Geforce.txt");
+                InputStreamReader isr = new InputStreamReader(fis,"GBK");
+                BufferedReader br = new BufferedReader(isr);
+
+                FileOutputStream fos = new FileOutputStream("Geforce.txt");
+                OutputStreamWriter osw = new OutputStreamWriter(fos,"UTF-8");
+                BufferedWriter bw = new BufferedWriter(osw);
+        ){
+            String str;
+            while((str = br.readLine()) != null){
+                bw.write(str);
+                bw.newLine();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+```
+## NIO
+- IO:阻塞式io
+- NIO：非阻塞式io
+1. Path(接口)：类似于File，用路径名表示一个目录或文件
+- Paths：工具类，用来创建Path接口对象
+2. Files：工具类，操作文件或目录的工具类
+- Files.copy(src,dest,StandardCopyOption.REPLACE_EXISTING)
+```java 
+    @Test
+    public void test(){
+        Path file = Paths.get("test","1.txt");
+        int count = file.getNameCount();
+        System.out.println(count);
+        Path name = file.getName(1);
+        System.out.println(name);
+    }
+    @Test
+    public void test2() throws IOException {
+        Path src = Paths.get("test","1.txt");
+        Path dest = Paths.get("test","2.txt");
+        Files.copy(src,dest, StandardCopyOption.REPLACE_EXISTING);
+    }
+```
+- Files.delete(Path path):功能类似于File类的delete()，不同的是当文件不存在时会报异常
+```java
+    public void test3() throws IOException {
+        //当文件不存在时会报错
+        Path path =  Paths.get("test","2.txt");
+        Files.delete(path);
+    }
+```
+- Files.move(src,dest,StandardCopyOption.REPLACE_EXISTING)
+```java
+    public void test4Move() throws IOException {
+        Path src = Paths.get("test2.txt");
+        Path dest =  Paths.get("test","2.txt");
+        Files.move(src,dest,StandardCopyOption.REPLACE_EXISTING);
+    }
+```
+- List readAllLine(Path path,Charset cs)
+3. 
