@@ -573,3 +573,21 @@ public class GroupChatServer {
 }
 
 ```
+## UDP协议编程
+- UDP：非面向连接的，不可靠的，基于数据报的传输协议
+- DatagramSocket
+- DatagramPacket
+- 发送端和接收端
+- 实际中一般是服务器客户端推送消息
+- 当客户端链接服务器，服务器就获取客户端的IP地址和端口号，服务器就给客户端推送广告消息
+- 发送端：
+  - DatagramPacket(byte[] buf, int offset, int length, InetAddress address, int port)
+  - 参数一：要发送的数据的字节数组
+  - 参数二：从字节数组的哪个下标开始
+  - 参数三：发送几个字节
+  - 参数四：接收方的IP
+  - 参数五：接收方的端口号
+- 接收端：
+  - DatagramPacket(byte[] buf, int length)
+  - 参数一：用来装数据的字节数组
+  - 参数二：数组的长度
