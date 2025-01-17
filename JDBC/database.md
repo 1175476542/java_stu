@@ -345,6 +345,8 @@ alter table student rename t_stu;
 6. 删除整张表
 - drop table 表名称;
 例如：`drop table t_stu;`
+
+
 ## DML
 - DML：增删改查    对应程序员来说，DML的重要性要比你掌握DDL还要重要。
 1. 添加数据，往表中插入数据
@@ -356,7 +358,7 @@ alter table student rename t_stu;
 - insert into 【数据库名.】表名称(字段列表) values(值列表1),(值列表2)。。。;
 
 ```bash
-mysql> shell;
+mysql> desc t_stu;
 +----------+-------------+------+-----+---------+-------+
 | Field    | Type        | Null | Key | Default | Extra |
 +----------+-------------+------+-----+---------+-------+
