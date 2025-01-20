@@ -273,3 +273,220 @@ alter table 【数据库名.】从表名称 drop foreign key 约束名;
 ```mysql
 select * from information_schema.TABLE_CONSTRAINTS where TABLE_CONSTRAINTS.TABLE_NAME = "表名称"
 ```
+## 函数
+### 求字符数
+1. length(xx)
+- 求得是字节数，和字符集有关
+2. char_length(xx)
+- 求字符数
+### 求字符串拼接
+1. concat(xx,xx)
+- 拼接xx和xx
+2. concat_ws(拼接的符号,xx,xx)
+- 以什么符号拼接
+3. upper(str),lower(str)
+- 转大小写
+4. left/right(xx,数量)
+- 返回左/右边的几个字符
+5. ltrim/rtrim/trim
+- 去除左边/右边/两边的空格
+6. trim(both '符号' from '字符串')/trim(leading '符号' from '字符串')/trim(trailing '符号' from '字符串')
+- 去掉两边/前边/后边的对应符号
+7. substring('字符串','第几个字符从1开始')
+- 从第几个字符截取
+### 数学函数
+1. seil()/floor()/round()
+- 向上取整/向下取整/四舍五入
+2. rand()
+- [0,1)随机值
+3. round(x,y)
+- round(3.1415926,3)
+- 保留小数点后y位，看第y+1位，决定四舍五入
+- truncate(3.1415926,3)
+- 保留小数点后y位，之后直接截掉
+### 日期时间函数
+1. now():现在的系统时间
+2. sysdate():同上
+3. current_time()：只有当前时间
+3. current_time()：只有当前日期
+4. current_timestamp():当前时间戳
+5. year(时间)/month(时间)/day(时间):求年/月/日
+6. dayofweek(那天):那天是星期几
+> 注：这里周日是1周六是7
+7. weekday(日期):那天是星期几
+> 注：这里周一是0，周日是6
+8. datediff(日期,日期)：两个日期之间的天数
+9. date_format():把日期转为字符串
+10. str_to_date():把字符串转为日期
+### 其他函数
+#### 加密函数
+1. password()
+2. md5()
+#### 分组函数
+1. count(*):统计数量
+- count(*)和count(常量)一样
+- count(字段名)是统计非null值的
+2. sum(x):总和
+3. max()/min():最大/最小值
+4. avg():平均值
+## 联合查询（关联查询）
+### 总共与七种情况
+1. a
+2. b
+3. a∩b
+4. a∪b
+5. a-a∩b
+6. b-a∩b
+7. a∪b-a∩b
+### 如何实现这些结果
+1. 内连接：a∩b
+2. 左外连接：a、a-a∩b
+3. 右外连接：b、b-a∩b
+4. 全外链接：a∪b、a∪b-a∩b
+- 不直接支持全外连接，但是可以使用union（合并）结果来实现以下两种结果
+#### 内连接
+- 关联条件 = 表数 - 1
+1. 结构
+```mysql
+select 字段列表 from A表名 inner join B表名 on 关联条件 where 其他条件
+```
+2. 代码
+- 错误的：当前代码会出现笛卡尔积：A表的数量*B表的数量
+```mysql
+select eid,ename,t_employee.did,dname
+from t_employee inner join t_department;
+```
+- 正确的
+```mysql
+select eid,ename,t_employee.did,dname
+from t_employee inner join t_department
+on t_employee.did = t_department.did;
+```
+- 简化版：字段取别名
+```mysql
+select eid,ename,emp.did,dname
+from t_employee as emp inner join t_department as dept
+on emp.did = dept.did;
+```
+3. 三张表
+```mysql
+select eid,ename,t_employee.`job_id`,job_name,t_employee.`did`,dname
+from t_employee inner join t_job inner join t_department
+on t_employee.did = t_department.did and t_employee.`job_id` = t_job
+```
+4. 另一种简化语法
+- 结构
+```mysql
+select 字段列表
+from A表名,B表名
+where 1个关联条件 and 其他条件
+```
+- 代码
+```mysql
+select eid,ename,t_employee.did,dname
+from t_employee,t_department
+where t_employee.did = t_department.did;
+```
+#### 左连接
+- 适用于A表的关联外键右null值
+- 例如：当A表的部门编号有null时，使用inner join的时候会少信息，使用left join可以以A表为主
+##### 查询A
+1. 结构
+```mysql
+# 
+select 字段列表
+from A left join B
+on 关联条件
+where 其他条件;
+```
+2. 代码
+```mysql
+select eid,ename,t_employee.did,dname
+from t_employee left join t_department
+on t_employee.did = t_department.did;
+```
+##### 查询A-A∩B
+1. 结构
+```mysql
+select 字段列表
+from A left join B
+on 关联条件
+where 关联字段 is null and 其他条件;
+```
+2. 代码
+```mysql
+select eid,ename,t_employee.did,dname
+from t_employee left join t_department
+on t_employee.did = t_department.did
+where t_employee.did is null;
+```
+#### 右连接
+- 适用于B表的关联外键右null值
+- 例如：当B表的部门编号有null时，使用inner join的时候会少信息，使用right join可以以A表为主
+##### 查询B
+1. 结构
+```mysql
+# 
+select 字段列表
+from B right join A
+on 关联条件
+where 其他条件;
+```
+2. 代码
+```mysql
+select eid,ename,t_employee.did,dname
+from t_department right join t_employee
+on t_employee.did = t_department.did;
+```
+##### 查询B-A∩B
+1. 结构
+```mysql
+select 字段列表
+from B right join A
+on 关联条件
+where 关联字段 is null and 其他条件;
+```
+2. 代码
+```mysql
+select eid,ename,t_employee.did,dname
+from t_department right join t_employee
+on t_employee.did = t_department.did
+where t_department.did is null;
+```
+#### 用union实现全外连接
+- 把A∪B转换成 A union B
+- 把A∪B-A∩B转换成 A-A∩B union B-A∩B
+- 通俗来讲就是左连接union右连接
+```mysql
+select *
+from t_employee left join t_department
+on t_employee.did = t_department.did
+union
+select *
+from t_employee right join t_department
+on t_employee.did = t_department.`did`;
+```
+## select的6大子句
+### 1.from:从哪里来筛选数据
+- 后面根表，视图，多行多列的二维表的结构
+### 2.where:意思是取那几行
+- 后面跟条件
+### 3.group by:分组
+- 后面跟字段名
+- 建议：分组查询的结果的字段列表中不要出现和分组无关的字段
+### 4.having:在分组统计结果中再次对统计结果加条件
+- 构面跟条件
+- 在分组统计结果中再次对统计结果加条件
+- having和where的区别
+  - where后面不能跟分组函数，having可以
+  - where适用于在原表的记录中筛选，having可以对原表筛选，但更多的应用于统计的结果筛选
+### 5.order by:排序
+- 后面根字段或表达式
+- desc：降序
+- asc：升序，可以省略
+### 6.limit:限制统计结果条数
+- limit m,n：m表示从几条开始取，n表示最多取n条数据
+- 分页：
+  - 假设page代表第几页，nums代表每页数量
+  - limit(page-1)*nums,nums
+> 强调：每一个select的6大子句的顺序是1-6
