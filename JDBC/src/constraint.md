@@ -490,3 +490,52 @@ on t_employee.did = t_department.`did`;
   - 假设page代表第几页，nums代表每页数量
   - limit(page-1)*nums,nums
 > 强调：每一个select的6大子句的顺序是1-6
+## 子查询
+- 在另外一个查询中嵌套了另一个查询
+- 子查询的结果作为外部查询的条件或者数据的筛选范围来使用
+- 子查询分类三类
+### where型
+- 子查询的结果作为外部查询的条件来使用
+1. 举例:联合查询
+```mysql
+# 查询所有运营部员工的信息
+select *
+from employee inner join department
+on employee.did = department.did
+where department.name = '运营部';
+```
+2. 子查询
+```mysql
+select *
+from employee where did = (select * from department where name = '运营部');
+```
+3. 总结：
+- 子查询结果是单值结果，比较云悬浮后面可以跟单值的结果
+- 子查询结果是一些多行的可以用in()比较运算符all(),any()
+### from型
+- 子查询的结果作为外部查询的筛选范围来使用
+1. 举例：
+- 查询每个部门的编号，部门名称，部门的人数
+- 每个部门的编号，部门名称在部门的表中
+- 每个部门的编号，部门的人数在员工表中统计出来的
+```mysql
+# 每个部门的编号，部门的人数 员工表
+select did ,COUNT(*) from employee group by did;# 把它看成是一个临时表
+
+# select 部门表.did,部门标的.name,temp.部门人数 
+# from 部门标 inner join 临时表temp
+# on 部门表.did = 临时表temp.did
+select department.did,department.name,temp.countOfDep # countOfDep是部门人数
+from department inner join (select did ,COUNT(*) from employee group by did) as temp
+on department.did = temp;
+```
+### exists型
+- 子查询的结果作为外部查询的条件来使用
+1. 查询部门信息，要求这些部门必须有员工
+- 运行规则：将select * from department的每一条记录，带入
+子查询去匹配，如果能查询出记录，就说明要保留这样，否则就去掉
+- 例如：把部门表中有而员工表没有的带入子查询，那么就不保留
+```mysql
+select * from department
+where exists(select * from empolyee where department.did = employee.did)
+```

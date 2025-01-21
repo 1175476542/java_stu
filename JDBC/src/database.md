@@ -414,7 +414,11 @@ set 字段名1 = 新值,
 `delete from t_stu;`
 - 例如：删除成绩是82.5的学生
 `delete from t_stu where score = 82.5;`
-4. 查询数据
+- `truncate` 表名称
+4. 用delete删除整张表和用truncate删除整张表的区别
+- truncate速度快，无法回滚，底层逻辑是：把表drop掉，然后新建一张空表
+- delete底层是一行一行删数据，速度慢
+5. 查询数据
 - select * from 表名称;
 - select * from 表名称 【where 条件】;
 - select 字段列表 from 表名称 【where 条件】;
@@ -426,7 +430,7 @@ set 字段名1 = 新值,
 `select sname from t_stu where gender is null;`
 - 例如：查询没有填写性别的学生的姓名和成绩
 `select sname,score from t_stu where gender is null;`
-5. 查询时给字段取别名
+6. 查询时给字段取别名
 - 字段名 as "别名"
 - 其中：
 - (1)如果""中的别名没有空格，可以省略""
