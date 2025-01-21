@@ -64,3 +64,149 @@ public class DatabaseConnection {
 
 ```
 - 代码演示（查询）
+```java
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+public class JDBCSelect {
+    public static void main(String[] args) throws Exception {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        String url = "jdbc:mysql://localhost:3306/java_sql_stu";
+        Connection conn = DriverManager.getConnection(url,"root","Sirius@0615..");
+        String sql = "select * from stu";
+        Statement st = conn.createStatement();
+        ResultSet result = st.executeQuery(sql);//结果集合，需要遍历
+        System.out.println(result);
+        //遍历结果集
+        while (result.next()){
+            int stuId = result.getInt("id");
+            String stuName = result.getString("name");
+            String stuGender = result.getString("gender");
+            System.out.println("学号："+ stuId + "姓名：" + stuName + "性别：" + stuGender);
+        }
+    }
+}
+
+```
+- 查询的另一种写法(直接写查询的列的index)
+```java
+import java.sql.*;
+
+public class JDBCSelect {
+    public static void main(String[] args) throws Exception {
+//        Class.forName("com.mysql.cj.jdbc.Driver");
+//        String url = "jdbc:mysql://localhost:3306/java_sql_stu";
+//        Connection conn = DriverManager.getConnection(url,"root","Sirius@0615..");
+//        String sql = "select * from stu";
+//        Statement st = conn.createStatement();
+//        ResultSet result = st.executeQuery(sql);//结果集合，需要遍历
+//        System.out.println(result);
+//        //遍历结果集
+//        while (result.next()){
+//            int stuId = result.getInt("id");
+//            String stuName = result.getString("name");
+//            String stuGender = result.getString("gender");
+//            System.out.println("学号："+ stuId + "姓名：" + stuName + "性别：" + stuGender);
+//        }
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        String url = "jdbc:mysql://localhost:3306/java_sql_stu";
+        Connection conn = DriverManager.getConnection(url,"root","Sirius@0615..");
+        String sql = "select * from stu";
+        Statement st= conn.createStatement();
+        ResultSet rs = st.executeQuery(sql);
+        while (rs.next()){
+            int stuId = rs.getInt(1);
+            String stuName = rs.getString(2);
+            String stuGender = rs.getString(3);
+            System.out.println("学号："+ stuId + "姓名：" + stuName + "性别：" + stuGender);
+        }
+    }
+}
+
+```
+## Statement
+### Statement存在的问题
+- 可以使用Statement的子接口PreparedStatement
+- PreparedStatement和Statement的区别是sql语句的位置
+- 前者在execute函数里面，后者在创建PreparedStatement的位置
+1. 在sql语句中插入变量(拼接问题)
+- 解决代码
+```java
+import javax.swing.plaf.nimbus.State;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.Scanner;
+
+public class TestPreparedStatement  {
+  public static void main(String[] args) throws Exception {
+    Scanner input = new Scanner(System.in);
+    System.out.println("请输入姓名：");
+    String name = input.next();
+    System.out.println("请输入性别：");
+    String gender = input.next();
+    Class.forName("com.mysql.cj.jdbc.Driver");
+    String url = "jdbc:mysql://localhost:3306/java_sql_stu";
+    Connection conn = DriverManager.getConnection(url,"root","Sirius@0615..");
+    String sql = "insert into stu values (default,?,?)";
+    PreparedStatement ps =conn.prepareStatement(sql);
+    //需要加一部设置?的值
+    ps.setString(1,name);//1表示的第一个?
+    ps.setString(2,gender);//2表示第二个问号
+    int len = ps.executeUpdate();
+    System.out.println(len>0?"添加成功":"添加失败");
+    ps.close();
+    conn.close();
+    input.close();
+  }
+}
+
+```
+2. sql注入
+- 解决代码
+```java
+import java.sql.*;
+import java.util.Scanner;
+
+//防止sql注入
+public class TestPreparedStatement2 {
+    public static void main(String[] args) throws Exception {
+        Scanner input = new Scanner(System.in);
+        System.out.println("请输入姓名：");
+        String name = input.next();
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        String url = "jdbc:mysql://localhost:3306/java_sql_stu";
+        Connection conn = DriverManager.getConnection(url,"root","Sirius@0615..");
+        String sql = "select * from stu where name = ?";
+//        System.out.println(sql);
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1,name);
+        System.out.println(sql);
+
+//        ps.setString(1,name);
+        ResultSet result = ps.executeQuery();//结果集合，需要遍历
+//        System.out.println(result);
+        //遍历结果集
+        while (result.next()){
+            int stuId = result.getInt("id");
+            String stuName = result.getString("name");
+            String stuGender = result.getString("gender");
+            System.out.println("学号："+ stuId + "姓名：" + stuName + "性别：" + stuGender);
+        }
+        ps.close();
+        conn.close();
+    }
+}
+
+```
+3. 无法处理blob等二进制类型的数据
+- 可以使用输入流
+- 解决代码
+```java
+
+```
+
+
