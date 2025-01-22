@@ -206,7 +206,130 @@ public class TestPreparedStatement2 {
 - 可以使用输入流
 - 解决代码
 ```java
+import java.io.FileInputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+
+public class TestPreparedStatementBlob3 {
+    public static void main(String[] args) throws Exception {
+        //往test库的t_userinfo标准添加一条记录
+        //1、注册驱动
+        Class.forName("com.mysql.cj.jdbc.Driver");
+
+        //2、获取连接
+        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_sql_stu", "root", "Sirius@0615..");
+
+        //3、编写sql
+        String sql = "insert into stu values(null,?,?,?)";//避免了拼接blob
+
+        //4、创建PreparedStatement
+        PreparedStatement pst = conn.prepareStatement(sql);
+
+        //5、设置？
+        pst.setString(1, "田曦薇");
+        pst.setString(2, "女");
+        pst.setObject(3, new FileInputStream("E:/存图/tianxiwei.webp"));
+
+        //6、执行sql
+        int len = pst.executeUpdate();
+        System.out.println(len > 0 ? "添加成功" : "添加失败");
+
+        //6、关闭
+        pst.close();
+        conn.close();
+
+    }
+}
 
 ```
+## 获取自增长键值
+- 在使用PreparedStatement添加数据时，获取自增长的键值
+- 例如：购物时，在结算时，会产生新订单，返回新的订单，而一般的订单编号都是自增长或随机生成的，保证这个订单号的唯一
+1. 如何让PreparedStatement执行完insert的sql后，带回增长的键值
+- Statement.RETURN_GENERAL_KEYS
+- 在创建这个PreparedStatement对象时，就要知名需要返回自增长的键值，否则mysql服务器不会返回
+- 代码演示：
+```java
+import java.sql.*;
+
+public class GetAutoIncriseValue {
+    public static void main(String[] args) throws  Exception{
+        //添加一个学生，返回id
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        String url = "jdbc:mysql://localhost:3306/java_sql_stu";
+        Connection conn = DriverManager.getConnection(url,"root","Sirius@0615..");
+        String sql = "insert into stu values(default,?,?,null)";
+        PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        ps.setString(1,"谭咏麟");
+        ps.setString(2,"男");
+        int len = ps.executeUpdate();
+        System.out.println(len>0?"添加成功":"添加失败");
+        ResultSet rs = ps.getGeneratedKeys();//把自增长的键值返回
+        if(rs.next()){
+            System.out.println("新学生学号："+rs.getObject(1));
+        }
+        rs.close();
+        ps.close();
+        conn.close();
+    }
+}
+
+```
+## 批处理
+1. 当要处理某一条sql语句多次
+- 例如：当用户购买了东西后，一个订单中有很多的商品，那么就会涉及到
+  - 在订单明细表中意味着要批量插入多条记录
+  - 批量修改商品销量和存量
+2. 如何实现批处理
+- 执行时不能直接调用ps.executeUpdate()
+- 需要做：
+  - 执行addBatch()本质上是一个缓冲区
+  - 然后执行executeBatch()
+  - 返回值是一个int数组
+  - mysql服务器默认是关闭批处理的，所以需要通过参数打开
+  - 在url加一个rewriteBatchedStatements = true
+  - 例如：jdbc:mysql://localhost:3306/java_sql_stu?rewriteBatchedStatements = true
+  - 如果有多个参数，用&符号连接
+- 代码演示
+```java
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+
+public class BatchProcessing {
+    public static void main(String[] args) throws Exception{
+
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        String url = "jdbc:mysql://localhost:3306/java_sql_stu?rewriteBatchedStatements = true";
+        Connection conn = DriverManager.getConnection(url,"root","Sirius@0615..");
+        String sql = "insert into stu values(default,?,default,null)";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        for (int i = 0; i < 1000; i++) {
+            ps.setString(1,"测试数据"+i);
+            ps.addBatch();
+        }
+        ps.executeBatch();
+    }
+}
+
+```
+> 注：必须使用values，不要使用value
+## jdbc的事务
+1. 如何处理事务
+- 在获取完连接后，在使用这个连接来创建PreparedStatement对象之前，要设置当前连接为手动提交事务
+- conn.setAutoCommit(false)
+- 在执行成功时，应该提交conn.commit() 
+- 在执行失败时，应该回滚conn.rollback()
+- 在关闭连接之前，把手动提交模式修改重新修改为自动提交模式
+因为你后面获取的连接基本上是从数据库连接池中获取的连接，这种连接是“重复”使用的，那么如果你把它修改为“手动”提交了，
+然后没有“还原”，当你把这个连接还给连接池时，这个连接可能会被其他人拿到，而他以为是自动提交的，然后操作完它的sql后，没有commit，结果是没有生效。
+conn.setAutoCommit(true);
+2. 需求
+- 删除某个订单表的记录
+- 删除订单明细表的记录
+- 如果在订单明细表建立外键时，指定on delete cascade，那么在删除订单时，会自动把对应的订单明细表的记录删除
+- 如果没有建立外键，那么在删除订单时，不会自动删除对应的订单明细的记录，那么就需要程序员，在编写对应sql去删除订单明细
+3. 
 
 
